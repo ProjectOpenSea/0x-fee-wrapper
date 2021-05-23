@@ -1,0 +1,26 @@
+{
+  "name": "0x-fee-wrapper-contract",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "truffle test",
+    "test-rpc": "ganache-cli --networkId 50 --port 8545"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MarvinJanssen/0x-fee-wrapper-contract.git"
+  },
+  "keywords": [],
+  "author": "Marvin Janssen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MarvinJanssen/0x-fee-wrapper-contract/issues"
+  },
+  "homepage": "https://github.com/MarvinJanssen/0x-fee-wrapper-contract#readme",
+  "devDependencies": {
+    "@openzeppelin/contracts": "^4.1.0",
+    "ganache-cli": "^6.12.2",
+    "truffle": "^5.3.7"
+  }
+}
