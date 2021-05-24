@@ -61,7 +61,6 @@ contract ZeroExFeeWrapper is ReentrancyGuard {
 			require(rightOrder.feeRecipientAddress == address(0x0) || rightOrder.feeRecipientAddress == address(this),"rightOrder.feeRecipientAddress is not equal to the wrapper address");
 			currentFeeBalance = ERC20(paymentTokenAddress).balanceOf(address(this));
 		}
-		// bytes4 matchOrdersSig = hex"88ec79fb";
 		(bool success, bytes memory result) = _exchange.call{value: msg.value}(abi.encodeWithSignature("matchOrders((address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes),(address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes),bytes,bytes)",leftOrder,rightOrder,leftSignature,rightSignature));
 		require(success,"matchOrders failed");
 		if (transferFees) {
