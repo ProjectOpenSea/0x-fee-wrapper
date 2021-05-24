@@ -11,6 +11,14 @@ contract ExchangeMock is ReentrancyGuard {
 	bytes4 _erc721 = hex"02571792";
 	bytes4 _erc1155 = hex"a7cb5fb7";
 
+	function getAssetProxy(bytes4 assetProxyId)
+		external
+		view
+		returns (address assetProxy)
+	{
+		return address(this);
+	}
+
 	function matchOrders(
 		LibOrder.Order memory leftOrder,
 		LibOrder.Order memory rightOrder,
@@ -20,15 +28,20 @@ contract ExchangeMock is ReentrancyGuard {
 		public
 		payable
 		reentrancyGuard
-		//returns (LibFillResults.MatchedFillResults memory matchedFillResults)
+		returns (LibFillResults.MatchedFillResults memory matchedFillResults)
 	{
-		transferTokens(leftOrder.makerAssetData,leftOrder.makerAddress,leftOrder.takerAddress,leftOrder.makerAssetAmount);
-		// transferTokens(rightOrder.makerAssetData,rightOrder.makerAddress,rightOrder.takerAddress,rightOrder.makerAssetAmount);
-		// if (leftOrder.makerFee > 0)
-		// 	transferTokens(leftOrder.makerFeeAssetData,leftOrder.makerAddress,leftOrder.feeRecipientAddress,leftOrder.makerFee);
-		// if (rightOrder.makerFee > 0)
-		// 	transferTokens(rightOrder.makerFeeAssetData,rightOrder.makerAddress,rightOrder.feeRecipientAddress,rightOrder.makerFee);
+		transferTokens(leftOrder.makerAssetData,leftOrder.makerAddress,rightOrder.makerAddress,leftOrder.makerAssetAmount);
+		transferTokens(rightOrder.makerAssetData,rightOrder.makerAddress,leftOrder.makerAddress,rightOrder.makerAssetAmount);
+		if (leftOrder.makerFee > 0)
+			transferTokens(leftOrder.makerFeeAssetData,leftOrder.makerAddress,leftOrder.feeRecipientAddress,leftOrder.makerFee);
+		if (rightOrder.makerFee > 0)
+			transferTokens(rightOrder.makerFeeAssetData,rightOrder.makerAddress,rightOrder.feeRecipientAddress,rightOrder.makerFee);
+		if (leftOrder.takerFee > 0)
+			transferTokens(leftOrder.takerFeeAssetData,leftOrder.takerAddress,leftOrder.feeRecipientAddress,leftOrder.takerFee);
+		if (rightOrder.takerFee > 0)
+			transferTokens(rightOrder.takerFeeAssetData,rightOrder.takerAddress,rightOrder.feeRecipientAddress,rightOrder.takerFee);
 		// refund final balance
+		return matchedFillResults;
 	}
 
 	function extractBytes4(bytes memory data)
@@ -36,7 +49,7 @@ contract ExchangeMock is ReentrancyGuard {
 		pure
 		returns (bytes4)
 	{
-		// require(data.length >= 4,"Data too short");
+		require(data.length >= 4,"Data too short");
 		return bytes4(data[0]) | (bytes4(data[1]) >> 8) | (bytes4(data[2]) >> 16) | (bytes4(data[3]) >> 24);
 	}
 
@@ -50,15 +63,15 @@ contract ExchangeMock is ReentrancyGuard {
 			transferERC721(assetData,from,to);
 		else if (proxyId == _erc1155)
 			transferERC1155(assetData,from,to,amount);
-		// else
-		// 	revert("Unknown proxyID standard");
+		else
+			revert("Unknown proxyID standard");
 	}
 
 	function transferERC20(bytes memory assetData,address from, address to, uint256 amount)
 		private
 	{
 		(address contractAddress) = abi.decode(ArrayUtils.arrayDrop(assetData,4), (address));
-		(bool success, bytes memory result) = contractAddress.call(abi.encodeWithSignature("transferFrom(address,address,uint256)",from,to,amount));
+		(bool success,) = contractAddress.call(abi.encodeWithSignature("transferFrom(address,address,uint256)",from,to,amount));
 		require(success,"ERC20 transfer failed");
 	}
 
@@ -66,7 +79,7 @@ contract ExchangeMock is ReentrancyGuard {
 		private
 	{
 		(address contractAddress, uint256 tokenId) = abi.decode(ArrayUtils.arrayDrop(assetData,4), (address,uint256));
-		(bool success, bytes memory result) = contractAddress.call(abi.encodeWithSignature("transferFrom(address,address,uint256)",from,to,tokenId));
+		(bool success,) = contractAddress.call(abi.encodeWithSignature("transferFrom(address,address,uint256)",from,to,tokenId));
 		require(success,"ERC721 transfer failed");
 	}
 
@@ -75,7 +88,7 @@ contract ExchangeMock is ReentrancyGuard {
 	{
 		(address contractAddress, uint256[] memory tokenIds, uint256[] memory amounts, bytes memory extra) = abi.decode(ArrayUtils.arrayDrop(assetData,4), (address,uint256[],uint256[],bytes));
 		require(tokenIds.length > 0,"No token IDs");
-		(bool success, bytes memory result) = contractAddress.call(abi.encodeWithSignature("safeTransferFrom(address,address,uint256,uint256,bytes)",from,to,tokenIds[0],amount,extra));
+		(bool success,) = contractAddress.call(abi.encodeWithSignature("safeTransferFrom(address,address,uint256,uint256,bytes)",from,to,tokenIds[0],amount,extra));
 		require(success,"ERC1155 transfer failed");
 	}
 }

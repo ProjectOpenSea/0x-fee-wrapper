@@ -4,24 +4,22 @@ const BN = require('bn.js');
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-const defaultOrder = {
-	takerAddress: NULL_ADDRESS,
-	feeRecipientAddress: NULL_ADDRESS,
-	makerFee: 0,
-	takerFee: 0,
-	expirationTimeSeconds: new BN('115792089237316195423570985008687907853269984665640564039457584007913129639935'),
-	salt: 0,
-	makerFeeAssetData: "0x",
-	takerFeeAssetData: "0x"
-};
-
 const requiredOrderFields = ["makerAddress","senderAddress","makerAssetAmount","takerAssetAmount","makerAssetData","takerAssetData"];
 
 function makeOrder(order) {
 	const missingFields = requiredOrderFields.filter(field => !order.hasOwnProperty(field));
 	if (missingFields.length)
 		throw new Error(`Missing fields: ${missingFields.join(', ')}`);
-	return Object.assign(defaultOrder,order);
+	return Object.assign({
+		takerAddress: NULL_ADDRESS,
+		feeRecipientAddress: NULL_ADDRESS,
+		makerFee: 0,
+		takerFee: 0,
+		expirationTimeSeconds: new BN('115792089237316195423570985008687907853269984665640564039457584007913129639935'),
+		salt: 0,
+		makerFeeAssetData: "0x",
+		takerFeeAssetData: "0x"
+	},order);
 }
 
 const proxyIds = {
@@ -42,4 +40,4 @@ function encodeAssetData(type,data) {
 	throw new Error(`Unknown type ${type}`);
 }
 
-module.exports = {makeOrder,encodeAssetData};
+module.exports = {makeOrder,encodeAssetData, proxyIds};
