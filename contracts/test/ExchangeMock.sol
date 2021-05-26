@@ -25,7 +25,7 @@ contract ExchangeMock is ReentrancyGuard {
 		bytes memory leftSignature,
 		bytes memory rightSignature
 		)
-		public
+		external
 		payable
 		reentrancyGuard
 		returns (LibFillResults.MatchedFillResults memory matchedFillResults)
@@ -40,7 +40,8 @@ contract ExchangeMock is ReentrancyGuard {
 			transferTokens(leftOrder.takerFeeAssetData,leftOrder.takerAddress,leftOrder.feeRecipientAddress,leftOrder.takerFee);
 		if (rightOrder.takerFee > 0)
 			transferTokens(rightOrder.takerFeeAssetData,rightOrder.takerAddress,rightOrder.feeRecipientAddress,rightOrder.takerFee);
-		// refund final balance
+		//TODO- refund final balance
+		//TODO- fill MatchedFillResults
 		return matchedFillResults;
 	}
 
@@ -68,7 +69,7 @@ contract ExchangeMock is ReentrancyGuard {
 	}
 
 	function transferERC20(bytes memory assetData,address from, address to, uint256 amount)
-		private
+		internal
 	{
 		(address contractAddress) = abi.decode(ArrayUtils.arrayDrop(assetData,4), (address));
 		(bool success,) = contractAddress.call(abi.encodeWithSignature("transferFrom(address,address,uint256)",from,to,amount));
@@ -76,7 +77,7 @@ contract ExchangeMock is ReentrancyGuard {
 	}
 
 	function transferERC721(bytes memory assetData,address from, address to)
-		private
+		internal
 	{
 		(address contractAddress, uint256 tokenId) = abi.decode(ArrayUtils.arrayDrop(assetData,4), (address,uint256));
 		(bool success,) = contractAddress.call(abi.encodeWithSignature("transferFrom(address,address,uint256)",from,to,tokenId));
@@ -84,7 +85,7 @@ contract ExchangeMock is ReentrancyGuard {
 	}
 
 	function transferERC1155(bytes memory assetData,address from, address to, uint256 amount)
-		private
+		internal
 	{
 		(address contractAddress, uint256[] memory tokenIds, uint256[] memory amounts, bytes memory extra) = abi.decode(ArrayUtils.arrayDrop(assetData,4), (address,uint256[],uint256[],bytes));
 		require(tokenIds.length > 0,"No token IDs");

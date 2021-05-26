@@ -45,7 +45,7 @@ contract('ExchangeMock',accounts => {
 
 		assert.equal((await erc20.balanceOf(accountA)).toNumber(),paymentAssetAmount);
 		assert.equal(await erc721.ownerOf(tokenId),accountB);
-	})
+	});
 
 	it('transfers fees',async () => {
 		const [exchange,erc20,erc721] = await deploy([ExchangeMock,TestERC20,TestERC721]);
@@ -86,5 +86,5 @@ contract('ExchangeMock',accounts => {
 		await exchange.matchOrders(leftOrder,rightOrder,"0x","0x",{from:deployer});
 
 		assert.equal((await erc20.balanceOf(deployer)).toNumber(),paymentAssetFee);
-	})
-})
+	});
+});

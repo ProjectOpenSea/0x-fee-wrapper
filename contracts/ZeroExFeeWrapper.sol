@@ -27,16 +27,43 @@ contract ZeroExFeeWrapper is ReentrancyGuard {
 	}
 
 	function setOwner(address owner,bool isOwner)
-		public
+		external
 		ownerOnly
 	{
 		_owners[owner] = isOwner;
 	}
 
+	function isOwner(address owner)
+		external
+		view
+		returns (bool)
+	{
+		return _owners[owner];
+	}
+
 	function setExchange(address exchange)
-		public
+		external
+		ownerOnly
 	{
 		_exchange = exchange;
+	}
+
+	function getExchange()
+		external
+		view
+		returns (address)
+	{
+		return _exchange;
+	}
+
+	function proxyCall(address target,bytes calldata callData)
+		external
+		payable
+		ownerOnly
+		returns (bytes memory)
+	{
+		(bool success, bytes memory result) = target.call{value: msg.value}(callData);
+		return result;
 	}
 
 	function matchOrders(
@@ -47,7 +74,7 @@ contract ZeroExFeeWrapper is ReentrancyGuard {
 		FeeData[] memory feeData,
 		address paymentTokenAddress
 		)
-		public
+		external
 		payable
 		reentrancyGuard
 		ownerOnly
@@ -65,7 +92,7 @@ contract ZeroExFeeWrapper is ReentrancyGuard {
 		require(success,"matchOrders failed");
 		if (transferFees) {
 			for (uint index = 0 ; index < feeData.length ; ++index) {
-				ERC20(paymentTokenAddress).transfer(feeData[index].recipient, feeData[index].paymentTokenAmount);
+				require(ERC20(paymentTokenAddress).transfer(feeData[index].recipient, feeData[index].paymentTokenAmount),"Transfer failed");
 			}
 			require(ERC20(paymentTokenAddress).balanceOf(address(this)) == currentFeeBalance,"Did not transfer the exact payment fee amount");
 		}

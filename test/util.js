@@ -4,7 +4,30 @@ const BN = require('bn.js');
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-const requiredOrderFields = ["makerAddress","senderAddress","makerAssetAmount","takerAssetAmount","makerAssetData","takerAssetData"];
+const requiredOrderFields = ["makerAddress","makerAssetAmount","takerAssetAmount","makerAssetData","takerAssetData"];
+
+// Truffle does not expose chai so it is impossible to add chai-as-promised.
+// This is a simple replacement function.
+// https://github.com/trufflesuite/truffle/issues/2090
+function assertIsRejected(promise,error_match,message) {
+	let passed = false;
+	return promise
+		.then(() => {
+			passed = true;
+			return assert.fail();
+			})
+		.catch(error => {
+			if (passed)
+				return assert.fail(message || 'Expected promise to be rejected')
+			if (error_match) {
+				if (typeof error_match === 'string')
+					return assert.equal(error_match,error.message,message);
+				if (error_match instanceof RegExp)
+					return error.message.match(error_match) || assert.fail(error.message,error_match.toString(),`'${error.message}' does not match ${error_match.toString()}: ${message}`);
+				return assert.instanceOf(error,error_match,message);
+				}
+		})
+}
 
 function makeOrder(order) {
 	const missingFields = requiredOrderFields.filter(field => !order.hasOwnProperty(field));
@@ -13,6 +36,7 @@ function makeOrder(order) {
 	return Object.assign({
 		takerAddress: NULL_ADDRESS,
 		feeRecipientAddress: NULL_ADDRESS,
+		senderAddress: NULL_ADDRESS,
 		makerFee: 0,
 		takerFee: 0,
 		expirationTimeSeconds: new BN('115792089237316195423570985008687907853269984665640564039457584007913129639935'),
@@ -40,4 +64,4 @@ function encodeAssetData(type,data) {
 	throw new Error(`Unknown type ${type}`);
 }
 
-module.exports = {makeOrder,encodeAssetData, proxyIds};
+module.exports = {NULL_ADDRESS, assertIsRejected, makeOrder, encodeAssetData, proxyIds};
