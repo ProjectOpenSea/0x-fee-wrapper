@@ -6,6 +6,19 @@ const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 const requiredOrderFields = ["makerAddress","makerAssetAmount","takerAssetAmount","makerAssetData","takerAssetData"];
 
+const eth = web3.eth.extend({
+	methods: [{
+	name: 'signTypedData',
+	call: 'eth_signTypedData',
+	params: 2,
+	inputFormatter: [web3.extend.formatters.inputAddressFormatter, null]
+	}]
+});
+
+async function signTypedData(data,account) {
+	return await eth.signTypedData(account,data);
+}
+
 // Truffle does not expose chai so it is impossible to add chai-as-promised.
 // This is a simple replacement function.
 // https://github.com/trufflesuite/truffle/issues/2090
@@ -55,13 +68,13 @@ const proxyIds = {
 function encodeAssetData(type,data) {
 	switch (type) {
 		case 'erc20':
-			return proxyIds.erc20 + web3.eth.abi.encodeParameters(['address'],[data.contractAddress]).substr(2);
+			return proxyIds.erc20 + eth.abi.encodeParameters(['address'],[data.contractAddress]).substr(2);
 		case 'erc721':
-			return proxyIds.erc721 + web3.eth.abi.encodeParameters(['address','uint256'],[data.contractAddress,data.tokenId]).substr(2);
+			return proxyIds.erc721 + eth.abi.encodeParameters(['address','uint256'],[data.contractAddress,data.tokenId]).substr(2);
 		case 'erc1155':
-			return proxyIds.erc1155 + web3.eth.abi.encodeParameters(['address','uint256[]','uint256[]','bytes'],[data.contractAddress,[data.tokenId],[data.tokenAmount],data.extra || "0x"]).substr(2);
+			return proxyIds.erc1155 + eth.abi.encodeParameters(['address','uint256[]','uint256[]','bytes'],[data.contractAddress,[data.tokenId],[data.tokenAmount],data.extra || "0x"]).substr(2);
 	}
 	throw new Error(`Unknown type ${type}`);
 }
 
-module.exports = {NULL_ADDRESS, assertIsRejected, makeOrder, encodeAssetData, proxyIds};
+module.exports = {NULL_ADDRESS, signTypedData, assertIsRejected, makeOrder, encodeAssetData, proxyIds};

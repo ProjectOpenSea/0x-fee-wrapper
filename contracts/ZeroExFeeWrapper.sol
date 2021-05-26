@@ -80,12 +80,16 @@ contract ZeroExFeeWrapper is ReentrancyGuard {
 		ownerOnly
 		returns (bytes memory)
 	{
+		if (leftOrder.senderAddress != address(0x0)) {
+			require(leftOrder.senderAddress == address(this),"leftOrder.senderAddress has to be 0x0 or the wrapper address");
+		}
+		if (rightOrder.senderAddress != address(0x0)) {
+			require(rightOrder.senderAddress == address(this),"rightOrder.senderAddress has to be 0x0 or the wrapper address");
+		}
 		bool transferFees = paymentTokenAddress != address(0x0) && feeData.length > 0;
 		uint256 currentFeeBalance;
 		if (transferFees) {
-			require(leftOrder.feeRecipientAddress != address(0x0) || rightOrder.feeRecipientAddress != address(0x0),"Neither order has a fee recipient");
-			require(leftOrder.feeRecipientAddress == address(0x0) || leftOrder.feeRecipientAddress == address(this),"leftOrder.feeRecipientAddress is not equal to the wrapper address");
-			require(rightOrder.feeRecipientAddress == address(0x0) || rightOrder.feeRecipientAddress == address(this),"rightOrder.feeRecipientAddress is not equal to the wrapper address");
+			require(leftOrder.feeRecipientAddress == address(this) || rightOrder.feeRecipientAddress == address(this),"Neither order has a fee recipient");
 			currentFeeBalance = ERC20(paymentTokenAddress).balanceOf(address(this));
 		}
 		(bool success, bytes memory result) = _exchange.call{value: msg.value}(abi.encodeWithSignature("matchOrders((address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes),(address,address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,bytes,bytes,bytes,bytes),bytes,bytes)",leftOrder,rightOrder,leftSignature,rightSignature));

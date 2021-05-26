@@ -2,10 +2,9 @@ const ExchangeMock = artifacts.require('ExchangeMock');
 const TestERC20 = artifacts.require('TestERC20');
 const TestERC721 = artifacts.require('TestERC721');
 
-const BN = require('bn.js');
 const {makeOrder,encodeAssetData,proxyIds} = require('./util');
 
-contract('ExchangeMock',accounts => {
+contract.skip('ExchangeMock',accounts => {
 
 	const deploy = async (list) => {
 		return await Promise.all(list.map(list => list.new()));

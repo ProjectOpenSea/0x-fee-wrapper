@@ -110,6 +110,115 @@ contract('ZeroExFeeWrapper',accounts => {
 		assert.equal(await erc721.ownerOf(tokenId),accountB);
 	});
 
+	it('exchanges tokens with sender address set to the wrapper',async () => {
+		const [deployer,accountA,accountB] = accounts;
+		const tokenId = 5;
+		const paymentAssetAmount = 2000;
+		const {wrapper,erc20,erc721} = await prepareBasicTest({
+			accountA,
+			accountB,
+			tokenId,
+			paymentAssetAmount
+		});
+
+		const leftAssetData = encodeAssetData('erc721',{contractAddress: erc721.address,tokenId});
+		const rightAssetData = encodeAssetData('erc20',{contractAddress: erc20.address});
+
+		const leftOrder = makeOrder({
+			makerAddress: accountA,
+			makerAssetData: leftAssetData,
+			makerAssetAmount: 1,
+			takerAssetData: rightAssetData,
+			takerAssetAmount: paymentAssetAmount,
+			senderAddress: wrapper.address
+			});
+
+		const rightOrder = makeOrder({
+			makerAddress: accountB,
+			makerAssetData: rightAssetData,
+			makerAssetAmount: paymentAssetAmount,
+			takerAssetData: leftAssetData,
+			takerAssetAmount: 1,
+			senderAddress: wrapper.address
+			});
+
+		await wrapper.matchOrders(leftOrder,rightOrder,"0x","0x",[],erc20.address,{from:deployer});
+
+		assert.equal((await erc20.balanceOf(accountA)).toNumber(),paymentAssetAmount);
+		assert.equal(await erc721.ownerOf(tokenId),accountB);
+	});
+
+	it('rejects orders that have the sender address set to anything other than the wrapper (if any)',async () => {
+		const [deployer,accountA,accountB,accountC] = accounts;
+		const wrapper = await ZeroExFeeWrapper.new(NULL_ADDRESS);
+
+		const emptySenderOrder = makeOrder({
+			makerAddress: accountA,
+			makerAssetData: "0x",
+			makerAssetAmount: 1,
+			takerAssetData: "0x",
+			takerAssetAmount: 1,
+			});
+
+		const senderOrder = makeOrder({
+			makerAddress: accountB,
+			makerAssetData: "0x",
+			makerAssetAmount: 1,
+			takerAssetData: "0x",
+			takerAssetAmount: 1,
+			senderAddress: accountC
+			});
+		
+		await assertIsRejected(
+			wrapper.matchOrders(senderOrder,emptySenderOrder,"0x","0x",[],NULL_ADDRESS,{from:deployer}),
+			/leftOrder.senderAddress has to be 0x0 or the wrapper address/
+		);
+		await assertIsRejected(
+			wrapper.matchOrders(emptySenderOrder,senderOrder,"0x","0x",[],NULL_ADDRESS,{from:deployer}),
+			/rightOrder.senderAddress has to be 0x0 or the wrapper address/
+		);
+		await assertIsRejected(
+			wrapper.matchOrders(senderOrder,senderOrder,"0x","0x",[],NULL_ADDRESS,{from:deployer}),
+			/leftOrder.senderAddress has to be 0x0 or the wrapper address/
+		);
+	});
+
+	it('aborts if the order matching fails',async () => {
+		const [deployer,accountA,accountB] = accounts;
+		const tokenId = 5;
+		const paymentAssetAmount = 2000;
+		const {wrapper,erc20,erc721} = await prepareBasicTest({
+			accountA,
+			accountB,
+			tokenId,
+			paymentAssetAmount
+		});
+
+		const leftAssetData = encodeAssetData('erc721',{contractAddress: erc721.address,tokenId});
+		const rightAssetData = encodeAssetData('erc20',{contractAddress: erc20.address});
+
+		const leftOrder = makeOrder({
+			makerAddress: accountA,
+			makerAssetData: leftAssetData,
+			makerAssetAmount: 1,
+			takerAssetData: rightAssetData,
+			takerAssetAmount: paymentAssetAmount,
+			});
+
+		const rightOrder = makeOrder({
+			makerAddress: accountB,
+			makerAssetData: rightAssetData,
+			makerAssetAmount: paymentAssetAmount + 1000,
+			takerAssetData: leftAssetData,
+			takerAssetAmount: 1,
+			});
+
+		await assertIsRejected(
+			wrapper.matchOrders(leftOrder,rightOrder,"0x","0x",[],NULL_ADDRESS,{from:deployer}),
+			/matchOrders failed/
+		);
+	});
+
 	it('transfers fees',async () => {
 		const [deployer,accountA,accountB] = accounts;
 		const tokenId = 5;
@@ -302,7 +411,7 @@ contract('ZeroExFeeWrapper',accounts => {
 		assert.equal(await erc20.balanceOf(wrapper.address),surplusBalance);
 	});
 
-	it('requires the feeRecipientAddress to be set to the wrapper (if any)',async () => {
+	it('requires the fee recipient address to be set to the wrapper (if any)',async () => {
 		const [deployer,accountA,accountB,accountC,accountD,accountE] = accounts;
 		const tokenId = 5;
 		const paymentAssetAmount = 2000;
@@ -347,7 +456,7 @@ contract('ZeroExFeeWrapper',accounts => {
 
 		await assertIsRejected(
 			wrapper.matchOrders(leftOrder,rightOrder,"0x","0x",feeData,erc20.address,{from:deployer}),
-			/rightOrder\.feeRecipientAddress is not equal to the wrapper address/
+			/Neither order has a fee recipient/
 		);
 	});
 });

@@ -36,10 +36,6 @@ contract ExchangeMock is ReentrancyGuard {
 			transferTokens(leftOrder.makerFeeAssetData,leftOrder.makerAddress,leftOrder.feeRecipientAddress,leftOrder.makerFee);
 		if (rightOrder.makerFee > 0)
 			transferTokens(rightOrder.makerFeeAssetData,rightOrder.makerAddress,rightOrder.feeRecipientAddress,rightOrder.makerFee);
-		if (leftOrder.takerFee > 0)
-			transferTokens(leftOrder.takerFeeAssetData,leftOrder.takerAddress,leftOrder.feeRecipientAddress,leftOrder.takerFee);
-		if (rightOrder.takerFee > 0)
-			transferTokens(rightOrder.takerFeeAssetData,rightOrder.takerAddress,rightOrder.feeRecipientAddress,rightOrder.takerFee);
 		//TODO- refund final balance
 		//TODO- fill MatchedFillResults
 		return matchedFillResults;
