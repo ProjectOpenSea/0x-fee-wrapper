@@ -2,10 +2,12 @@ pragma solidity 0.8.0;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./lib/ReentrancyGuard.sol";
 import "./lib/LibOrder.sol";
 
 contract ZeroExFeeWrapper is ReentrancyGuard {
+
 	mapping(address => bool) _owners;
 	address _exchange;
 
@@ -24,6 +26,15 @@ contract ZeroExFeeWrapper is ReentrancyGuard {
 	{
 		require(_owners[msg.sender],"Owner only");
 		_;
+	}
+
+	modifier refundRemainingBalance()
+	{
+		_;
+		uint256 balance = address(this).balance;
+		if (balance > 0) {
+			payable(msg.sender).transfer(balance);
+		}
 	}
 
 	function setOwner(address owner,bool isOwner)
@@ -76,8 +87,9 @@ contract ZeroExFeeWrapper is ReentrancyGuard {
 		)
 		external
 		payable
-		reentrancyGuard
 		ownerOnly
+		reentrancyGuard
+		refundRemainingBalance
 		returns (bytes memory)
 	{
 		if (leftOrder.senderAddress != address(0x0)) {
@@ -96,7 +108,7 @@ contract ZeroExFeeWrapper is ReentrancyGuard {
 		require(success,"matchOrders failed");
 		if (transferFees) {
 			for (uint index = 0 ; index < feeData.length ; ++index) {
-				require(ERC20(paymentTokenAddress).transfer(feeData[index].recipient, feeData[index].paymentTokenAmount),"Transfer failed");
+				SafeERC20.safeTransfer(ERC20(paymentTokenAddress),feeData[index].recipient, feeData[index].paymentTokenAmount);
 			}
 			require(ERC20(paymentTokenAddress).balanceOf(address(this)) == currentFeeBalance,"Did not transfer the exact payment fee amount");
 		}

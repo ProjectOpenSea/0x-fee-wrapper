@@ -19,6 +19,15 @@ contract ExchangeMock is ReentrancyGuard {
 		return address(this);
 	}
 
+	modifier refundRemainingBalance()
+	{
+		_;
+		uint256 balance = address(this).balance;
+		if (balance > 0) {
+			payable(msg.sender).transfer(balance);
+		}
+	}
+
 	function matchOrders(
 		LibOrder.Order memory leftOrder,
 		LibOrder.Order memory rightOrder,
@@ -28,6 +37,7 @@ contract ExchangeMock is ReentrancyGuard {
 		external
 		payable
 		reentrancyGuard
+		refundRemainingBalance
 		returns (LibFillResults.MatchedFillResults memory matchedFillResults)
 	{
 		transferTokens(leftOrder.makerAssetData,leftOrder.makerAddress,rightOrder.makerAddress,leftOrder.makerAssetAmount);
@@ -36,7 +46,6 @@ contract ExchangeMock is ReentrancyGuard {
 			transferTokens(leftOrder.makerFeeAssetData,leftOrder.makerAddress,leftOrder.feeRecipientAddress,leftOrder.makerFee);
 		if (rightOrder.makerFee > 0)
 			transferTokens(rightOrder.makerFeeAssetData,rightOrder.makerAddress,rightOrder.feeRecipientAddress,rightOrder.makerFee);
-		//TODO- refund final balance
 		//TODO- fill MatchedFillResults
 		return matchedFillResults;
 	}
