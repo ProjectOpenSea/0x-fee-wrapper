@@ -6,8 +6,8 @@
   "scripts": {
     "test": "truffle test",
     "test-rpc": "ganache-cli --networkId 50 --port 8545",
-    "deploy:baobab": "CHAIN_ID=1001 KAS_ACCESS_KEY=$KAS_ACCESS_KEY KAS_SECRET_KEY=$KAS_SECRET_KEY OWNER=$ADDRESS OWNER_PRIVATE_KEY=$OWNER_PRIVATE_KEY node deploy.js",
-    "deploy:cypress": "CHAIN_ID=8217 KAS_ACCESS_KEY=$KAS_ACCESS_KEY KAS_SECRET_KEY=$KAS_SECRET_KEY OWNER=$ADDRESS OWNER_PRIVATE_KEY=$OWNER_PRIVATE_KEY node deploy.js"
+    "deploy:baobab": "CHAIN_ID=1001 node deploy-to-klaytn.js",
+    "deploy:cypress": "CHAIN_ID=8217 node deploy-to-klaytn.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@0x-klaytn/contract-addresses": "^4.6.7",
-    "caver-js": "^1.6.4"
+    "caver-js": "^1.6.4",
+    "dotenv": "^10.0.0"
   }
 }

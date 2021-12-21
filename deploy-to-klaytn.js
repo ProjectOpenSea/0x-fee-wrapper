@@ -1,7 +1,11 @@
+const Caver = require("caver-js");
+const dotenv = require('dotenv');
+
 const getContractAddressesForChainOrThrow =
   require("@0x-klaytn/contract-addresses").getContractAddressesForChainOrThrow;
-const Caver = require("caver-js");
 const zeroExFeeWrapper = require("./build/contracts/ZeroExFeeWrapper.json");
+
+dotenv.config()
 
 const chainId = Number(process.env.CHAIN_ID);
 const kasAccessKey = process.env.KAS_ACCESS_KEY;
