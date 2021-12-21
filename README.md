@@ -2,7 +2,9 @@
 
 # Install dependencies
 
-Tested on Node v16.11.0.
+```bash
+nvm use
+```
 
 ```bash
 $ npm install
