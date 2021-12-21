@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "truffle test",
-    "test-rpc": "ganache-cli --networkId 50 --port 8545"
+    "test-rpc": "ganache-cli --networkId 50 --port 8545",
+    "deploy:baobab": "CHAIN_ID=1001 node deploy-to-klaytn.js",
+    "deploy:cypress": "CHAIN_ID=8217 node deploy-to-klaytn.js"
   },
   "repository": {
     "type": "git",
@@ -22,5 +24,10 @@
     "@openzeppelin/contracts": "^4.1.0",
     "ganache-cli": "^6.12.2",
     "truffle": "^5.3.7"
+  },
+  "dependencies": {
+    "@0x-klaytn/contract-addresses": "^4.6.7",
+    "caver-js": "^1.6.4",
+    "dotenv": "^10.0.0"
   }
 }
